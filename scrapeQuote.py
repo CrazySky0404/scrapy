@@ -11,7 +11,8 @@ class QuotesSpider(scrapy.Spider):
     def start_requests(self):
         urls = [
              'https://www.russianfood.com/recipes/recipe.php?rid=155166',
-            'https://www.russianfood.com/recipes/recipe.php?rid=162162',
+             'https://www.russianfood.com/recipes/recipe.php?rid=162162',
+             'https://www.russianfood.com/recipes/recipe.php?rid=120468',
         ]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
@@ -20,6 +21,11 @@ class QuotesSpider(scrapy.Spider):
         id = response.xpath('//div[@class="rcp_share_block_top"]').css('div::attr(data-url)').get()
 
         yield {
+            'Hours': response.xpath('//div[@class="sub_info"]//div[@class="el"][2]//span/b[1]/text()').get(),
+            'Minutes': response.xpath('//div[@class="sub_info"]//div[@class="el"][2]//span/b[2]/text()').get(),
+
+
+            'Number of servings': response.xpath('//div[@class="el"]//span//b/text()').get(),
             'ID': re.search(r'(?<==)\w+', id).group(0),
             'Name_recipe': response.xpath('//h1/text()').get(),
             'Desctiption_recipe': response.xpath('//div[@class="rcp_share_block_top"]').css('div::attr(data-description)').get()
