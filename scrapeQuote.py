@@ -10,22 +10,29 @@ class QuotesSpider(scrapy.Spider):
 
     def start_requests(self):
         urls = [
-             'https://www.russianfood.com/recipes/recipe.php?rid=155166',
+             'https://www.russianfood.com/recipes/recipe.php?rid=124581',
              'https://www.russianfood.com/recipes/recipe.php?rid=162162',
-             'https://www.russianfood.com/recipes/recipe.php?rid=120468',
+             #'https://www.russianfood.com/recipes/recipe.php?rid=120468',
+             #'https://www.russianfood.com/recipes/recipe.php?rid=122523',
+             #'https://www.russianfood.com/recipes/recipe.php?rid=121840'
         ]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
         id = response.xpath('//div[@class="rcp_share_block_top"]').css('div::attr(data-url)').get()
+        #hours = response.xpath('//div[@class="sub_info"]//div[@class="el"][2]//span/b[1]/text()').get()
+        times = response.xpath('//div[@class="sub_info"]//div[@class="el"][2]/span/b/text()').getall()
 
         yield {
-            'Hours': response.xpath('//div[@class="sub_info"]//div[@class="el"][2]//span/b[1]/text()').get(),
-            'Minutes': response.xpath('//div[@class="sub_info"]//div[@class="el"][2]//span/b[2]/text()').get(),
+            #'hours': response.xpath('//div[@class="sub_info"]//div[@class="el"][2]//span/b[1]/text()').get(),
+            #'Times': times[:-1],
+            'Times2': response.xpath('//div[@class="sub_info"]//div[@class="el"]//b/text()').getall(),
+            #'Products_table': response.xpath('//*[@class="ingr"]').get(), таблиця інгредієнтів з тегами
+            'Products_table': response.xpath('//*[@class="ingr"]//td//span/text()').getall(),
 
 
-            'Number of servings': response.xpath('//div[@class="el"]//span//b/text()').get(),
+            'Number of servings': response.xpath('//*[@class="portion"]/text()').re('\d+'),
             'ID': re.search(r'(?<==)\w+', id).group(0),
             'Name_recipe': response.xpath('//h1/text()').get(),
             'Desctiption_recipe': response.xpath('//div[@class="rcp_share_block_top"]').css('div::attr(data-description)').get()
