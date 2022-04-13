@@ -8,10 +8,12 @@ class QuotesSpider(scrapy.Spider):
     name = "quotes"
     delimiter = ";"
 
+
     def start_requests(self):
         urls = [
              'https://www.russianfood.com/recipes/recipe.php?rid=124581',
-             'https://www.russianfood.com/recipes/recipe.php?rid=162162',
+             #'https://www.russianfood.com/recipes/recipe.php?rid=157024',
+             #'https://www.russianfood.com/recipes/recipe.php?rid=162162',
              #'https://www.russianfood.com/recipes/recipe.php?rid=120468',
              #'https://www.russianfood.com/recipes/recipe.php?rid=122523',
              #'https://www.russianfood.com/recipes/recipe.php?rid=121840'
@@ -19,17 +21,40 @@ class QuotesSpider(scrapy.Spider):
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
+
     def parse(self, response):
         id = response.xpath('//div[@class="rcp_share_block_top"]').css('div::attr(data-url)').get()
         #hours = response.xpath('//div[@class="sub_info"]//div[@class="el"][2]//span/b[1]/text()').get()
-        times = response.xpath('//div[@class="sub_info"]//div[@class="el"][2]/span/b/text()').getall()
+        times = response.xpath('//div[@class="sub_info"]//div[@class="el"]//b/text()').getall(),
+        world_portion = response.xpath('//div[@class="sub_info"]//div[@class="el"]/text()').re(r'\w+'), #" ,порций, , (ваши ,) "
+        all_numbers = response.xpath('//div[@class="sub_info"]//div[@class="el"]//b/text()').getall()
+        str = (' '.join(world_portion[0]))
+        list_w = str.split()
+        checklist = {'порции', 'порций', 'порция', 'ваши'}
+        common_words = set(str.split()) & checklist
+
+        if 'порций' or 'порции' or 'порция' in common_words:
+            if 'ваши' in common_words:
+                result_time = all_numbers[1:-1]
+            else:
+                result_time = all_numbers[1:0]
+        elif 'ваши' in common_words:
+            result_time = all_numbers[:-1]
+        else:
+            result_time = all_numbers
+
+
 
         yield {
-            #'hours': response.xpath('//div[@class="sub_info"]//div[@class="el"][2]//span/b[1]/text()').get(),
-            #'Times': times[:-1],
-            'Times2': response.xpath('//div[@class="sub_info"]//div[@class="el"]//b/text()').getall(),
-            #'Products_table': response.xpath('//*[@class="ingr"]').get(), таблиця інгредієнтів з тегами
-            'Products_table': response.xpath('//*[@class="ingr"]//td//span/text()').getall(),
+            #'Times': [n[1:2] & print('Portion is here') for n in times if 'порций' in str],
+            #'Порций': ['порций is here' for item in world_portion if 'порций' in world_portion[0]],
+            #'Type22': [f"{item} +is here" for item in list_w if 'порций' in list_w],
+            'Type33': result_time,
+            'Time': all_numbers,
+            #'TimesAll': response.xpath('//div[@class="sub_info"]//div[@class="el"]//b/text()').getall(),
+            # Таблиця продуктів з тегами
+            #'Products_table': response.xpath('//*[@class="ingr"]').get(),
+            #'Products_table_text': response.xpath('//*[@class="ingr"]//td//span/text()').getall(),
 
 
             'Number of servings': response.xpath('//*[@class="portion"]/text()').re('\d+'),
