@@ -12,11 +12,14 @@ class QuotesSpider(scrapy.Spider):
     def start_requests(self):
         urls = [
              'https://www.russianfood.com/recipes/recipe.php?rid=124581',
-             #'https://www.russianfood.com/recipes/recipe.php?rid=157024',
-             #'https://www.russianfood.com/recipes/recipe.php?rid=162162',
-             #'https://www.russianfood.com/recipes/recipe.php?rid=120468',
-             #'https://www.russianfood.com/recipes/recipe.php?rid=122523',
-             #'https://www.russianfood.com/recipes/recipe.php?rid=121840'
+              'https://www.russianfood.com/recipes/recipe.php?rid=125466',
+              'https://www.russianfood.com/recipes/recipe.php?rid=116458',
+              'https://www.russianfood.com/recipes/recipe.php?rid=113251',
+             'https://www.russianfood.com/recipes/recipe.php?rid=157024',
+             'https://www.russianfood.com/recipes/recipe.php?rid=162162',
+             'https://www.russianfood.com/recipes/recipe.php?rid=120468',
+             'https://www.russianfood.com/recipes/recipe.php?rid=122523',
+             'https://www.russianfood.com/recipes/recipe.php?rid=121840'
         ]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
@@ -30,32 +33,38 @@ class QuotesSpider(scrapy.Spider):
         all_numbers = response.xpath('//div[@class="sub_info"]//div[@class="el"]//b/text()').getall()
         str = (' '.join(world_portion[0]))
         list_w = str.split()
-        checklist = {'порции', 'порций', 'порция', 'ваши'}
+        checklist = {'порции', 'порций', 'порция', 'порции по', 'ваши', 'по'}
         common_words = set(str.split()) & checklist
 
         if 'порций' or 'порции' or 'порция' in common_words:
-            if 'ваши' in common_words:
+            if 'по' in common_words:
+                if 'ваши' in common_words:
+                    result_time = all_numbers[2:-1]
+                else:
+                    result_time = all_numbers[2:0]
+            elif 'ваши' in common_words:
                 result_time = all_numbers[1:-1]
             else:
-                result_time = all_numbers[1:0]
+                result_time = all_numbers
+        elif 'по' in common_words:
+            result_time = all_numbers[2:]
         elif 'ваши' in common_words:
             result_time = all_numbers[:-1]
+        elif None in common_words:
+            result_time = "hello"
         else:
-            result_time = all_numbers
+            result_time = 'Oooops!'
 
 
 
         yield {
-            #'Times': [n[1:2] & print('Portion is here') for n in times if 'порций' in str],
-            #'Порций': ['порций is here' for item in world_portion if 'порций' in world_portion[0]],
-            #'Type22': [f"{item} +is here" for item in list_w if 'порций' in list_w],
-            'Type33': result_time,
+
+            'result_time': result_time,
             'Time': all_numbers,
             #'TimesAll': response.xpath('//div[@class="sub_info"]//div[@class="el"]//b/text()').getall(),
             # Таблиця продуктів з тегами
             #'Products_table': response.xpath('//*[@class="ingr"]').get(),
             #'Products_table_text': response.xpath('//*[@class="ingr"]//td//span/text()').getall(),
-
 
             'Number of servings': response.xpath('//*[@class="portion"]/text()').re('\d+'),
             'ID': re.search(r'(?<==)\w+', id).group(0),
