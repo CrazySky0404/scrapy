@@ -7,10 +7,7 @@ import scrapy
 
 class QuotesSpider(scrapy.Spider):
     name = "quotes"
-    start_urls = [
-        #'https://www.russianfood.com/recipes/bytype/?fid=1660',
-        'https://www.russianfood.com/recipes/bytype/?fid=12',
-    ]
+    start_urls = [#]
     visited_urls = []
 
     def start_requests(self):
@@ -21,7 +18,6 @@ class QuotesSpider(scrapy.Spider):
     def parse(self, response):
         if response.url not in self.visited_urls:
             self.visited_urls.append(response.url)
-        #find_links =
         for link in response.xpath('//*[@class="foto"]//a/@href').extract():
             open_link = urljoin(response.url, link)
             yield response.follow(open_link, callback=self.parse_post)
@@ -30,15 +26,13 @@ class QuotesSpider(scrapy.Spider):
             next_page = response.xpath('//*[@class="page_selector"]//tr//td[1]/a[1]/@href').get()
             open_link2 = urljoin(response.url, next_page)
             yield response.follow(open_link2, callback=self.parse)
-        #abs_url = f"https://www.russianfood.com{next_page}"
         open_link2 = urljoin(response.url, next_page)
         yield response.follow(open_link2, callback=self.parse)
-        # #yield scrapy.Request(url=open_link2, callback=self.parse)
         print(f"Пройдені лінки: {self.visited_urls}")
 
     def parse_post(self, response):
         id = response.xpath('//div[@class="rcp_share_block_top"]').css('div::attr(data-url)').get()
-        # hours = response.xpath('//div[@class="sub_info"]//div[@class="el"][2]//span/b[1]/text()').get()
+        hours = response.xpath('//div[@class="sub_info"]//div[@class="el"][2]//span/b[1]/text()').get()
         times = response.xpath('//div[@class="sub_info"]//div[@class="el"]//b/text()').getall(),
         world_portion = response.xpath('//div[@class="sub_info"]//div[@class="el"]/text()').re(
             r'\w+'),  # " ,порций, , (ваши ,) "
